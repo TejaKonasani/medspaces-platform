@@ -1,11 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, SlidersHorizontal, Loader2 } from 'lucide-react';
 import ListingCard from '@/components/ListingCard';
-import { sampleListings, cities, specialties, facilityTypes } from '@/data/listings';
+import { cities, specialties, facilityTypes } from '@/data/listings';
+import type { Listing, PaginationMeta } from '@/types';
 
 export default function BrowsePage() {
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
@@ -13,20 +19,41 @@ export default function BrowsePage() {
   const [priceRange, setPriceRange] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const filteredListings = useMemo(() => {
-    return sampleListings.filter((listing) => {
-      if (searchTerm && !listing.clinicName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-          !listing.locality.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-      if (selectedCity && listing.city !== selectedCity) return false;
-      if (selectedSpecialty && !listing.specialties.includes(selectedSpecialty)) return false;
-      if (selectedFacilityType && listing.facilityType !== selectedFacilityType) return false;
-      if (priceRange) {
-        const [min, max] = priceRange.split('-').map(Number);
-        if (listing.pricing.monthlyFee < min || (max && listing.pricing.monthlyFee > max)) return false;
+  const fetchListings = useCallback(async () => {
+    setLoading(true);
+    setError('');
+
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (selectedCity) params.set('city', selectedCity);
+    if (selectedSpecialty) params.set('specialty', selectedSpecialty);
+    if (selectedFacilityType) params.set('facilityType', selectedFacilityType);
+    if (priceRange) {
+      const [min, max] = priceRange.split('-');
+      if (min) params.set('minPrice', min);
+      if (max) params.set('maxPrice', max);
+    }
+
+    try {
+      const res = await fetch(`/api/listings?${params.toString()}`);
+      const data = await res.json();
+      if (data.success) {
+        setListings(data.data);
+        setMeta(data.meta);
+      } else {
+        setError(data.error || 'Failed to fetch listings');
       }
-      return true;
-    });
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, [searchTerm, selectedCity, selectedSpecialty, selectedFacilityType, priceRange]);
+
+  useEffect(() => {
+    const debounce = setTimeout(fetchListings, 300);
+    return () => clearTimeout(debounce);
+  }, [fetchListings]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -45,7 +72,6 @@ export default function BrowsePage() {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Search Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <h1 className="text-3xl font-bold text-gray-900">Browse Consultation Spaces</h1>
@@ -73,7 +99,6 @@ export default function BrowsePage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Filters Sidebar */}
           <aside className={`md:w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden md:block'}`}>
             <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
               <div className="flex items-center justify-between mb-4">
@@ -144,21 +169,30 @@ export default function BrowsePage() {
             </div>
           </aside>
 
-          {/* Listings Grid */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
               <p className="text-gray-600">
-                <span className="font-semibold text-gray-900">{filteredListings.length}</span> spaces found
+                {loading ? (
+                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span>
+                ) : (
+                  <><span className="font-semibold text-gray-900">{meta?.total ?? listings.length}</span> spaces found</>
+                )}
               </p>
             </div>
 
-            {filteredListings.length > 0 ? (
+            {error && (
+              <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">{error}</div>
+            )}
+
+            {!loading && listings.length > 0 && (
               <div className="grid sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredListings.map((listing) => (
+                {listings.map((listing) => (
                   <ListingCard key={listing.id} listing={listing} />
                 ))}
               </div>
-            ) : (
+            )}
+
+            {!loading && listings.length === 0 && !error && (
               <div className="text-center py-16">
                 <Search className="h-12 w-12 text-gray-300 mx-auto" />
                 <h3 className="mt-4 text-lg font-semibold text-gray-900">No spaces found</h3>

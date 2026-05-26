@@ -1,20 +1,52 @@
 'use client';
 
 import { useState } from 'react';
-import { UserPlus, CheckCircle } from 'lucide-react';
+import { UserPlus, CheckCircle, Loader2 } from 'lucide-react';
 import { specialties, cities } from '@/data/listings';
 
 export default function DoctorRegistrationPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
   const [formData, setFormData] = useState({
     fullName: '', mobile: '', email: '', qualification: '', specialty: '', subSpecialty: '',
     registrationNumber: '', experience: '', preferredLocations: [] as string[],
     consultingTimes: '', practiceModel: '', website: '', linkedin: '', affiliations: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError('');
+    setFieldErrors({});
+
+    try {
+      const res = await fetch('/api/doctors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          experience: Number(formData.experience),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        if (data.errors) {
+          setFieldErrors(data.errors);
+        }
+        setError(data.error || 'Registration failed. Please check your inputs.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -43,20 +75,27 @@ export default function DoctorRegistrationPage() {
 
       <section className="section-padding">
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm p-8">
+          {error && (
+            <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">{error}</div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <h2 className="text-xl font-semibold border-b pb-3">Personal Information</h2>
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                 <input type="text" required value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['fullName'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['fullName'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
                 <input type="tel" required value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['mobile'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['mobile'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                 <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['email'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['email'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Qualification *</label>
@@ -72,6 +111,7 @@ export default function DoctorRegistrationPage() {
                   <option value="">Select Specialty</option>
                   {specialties.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
+                {fieldErrors['specialty'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['specialty'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sub-specialty</label>
@@ -84,6 +124,7 @@ export default function DoctorRegistrationPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience *</label>
                 <input type="number" required min="0" value={formData.experience} onChange={(e) => setFormData({...formData, experience: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['experience'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['experience'][0]}</p>}
               </div>
             </div>
 
@@ -134,7 +175,10 @@ export default function DoctorRegistrationPage() {
               </div>
             </div>
 
-            <button type="submit" className="btn-primary w-full mt-6">Register</button>
+            <button type="submit" disabled={loading} className="btn-primary w-full mt-6 flex items-center justify-center gap-2">
+              {loading && <Loader2 className="h-5 w-5 animate-spin" />}
+              {loading ? 'Registering...' : 'Register'}
+            </button>
           </form>
         </div>
       </section>

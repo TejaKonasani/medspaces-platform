@@ -1,18 +1,51 @@
 'use client';
 
 import { useState } from 'react';
-import { Send, CheckCircle } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Send, CheckCircle, Loader2 } from 'lucide-react';
 import { specialties } from '@/data/listings';
 
 export default function InquiryPage() {
+  const searchParams = useSearchParams();
+  const listingId = searchParams.get('listing') || '';
+
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
   const [formData, setFormData] = useState({
-    doctorName: '', specialty: '', phone: '', email: '', listingInterest: '', message: '',
+    doctorName: '', specialty: '', phone: '', email: '', listingId, message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError('');
+    setFieldErrors({});
+
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        if (data.errors) {
+          setFieldErrors(data.errors);
+        }
+        setError(data.error || 'Submission failed. Please check your inputs.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -41,11 +74,16 @@ export default function InquiryPage() {
 
       <section className="section-padding">
         <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-8">
+          {error && (
+            <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">{error}</div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
                 <input type="text" required value={formData.doctorName} onChange={(e) => setFormData({...formData, doctorName: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['doctorName'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['doctorName'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Specialty *</label>
@@ -53,25 +91,28 @@ export default function InquiryPage() {
                   <option value="">Select</option>
                   {specialties.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
+                {fieldErrors['specialty'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['specialty'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
                 <input type="tel" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['phone'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['phone'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                 <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['email'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['email'][0]}</p>}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Listing Interested In</label>
-              <input type="text" value={formData.listingInterest} onChange={(e) => setFormData({...formData, listingInterest: e.target.value})} placeholder="Clinic name or listing reference" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-            </div>
-            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
-              <textarea required rows={4} value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} placeholder="Tell us about your requirements..." className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+              <textarea required rows={4} value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} placeholder="Tell us about your requirements (minimum 10 characters)..." className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+              {fieldErrors['message'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['message'][0]}</p>}
             </div>
-            <button type="submit" className="btn-primary w-full">Submit Inquiry</button>
+            <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+              {loading && <Loader2 className="h-5 w-5 animate-spin" />}
+              {loading ? 'Submitting...' : 'Submit Inquiry'}
+            </button>
           </form>
         </div>
       </section>

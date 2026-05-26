@@ -1,20 +1,85 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, CheckCircle } from 'lucide-react';
+import { Building2, CheckCircle, Loader2 } from 'lucide-react';
 import { specialties, cities } from '@/data/listings';
 
 export default function AddSpacePage() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
   const [formData, setFormData] = useState({
     clinicName: '', facilityType: '', contactPerson: '', mobile: '', email: '',
-    city: '', address: '', rooms: '', preferredSpecialties: [] as string[],
+    city: '', locality: '', address: '', rooms: '', preferredSpecialties: [] as string[],
     pricingModel: '', monthlyFee: '', availability: '', mapsLocation: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError('');
+    setFieldErrors({});
+
+    const payload = {
+      clinicName: formData.clinicName,
+      facilityType: formData.facilityType,
+      city: formData.city,
+      locality: formData.locality || formData.city,
+      address: formData.address,
+      contactPerson: formData.contactPerson,
+      phone: formData.mobile,
+      email: formData.email,
+      whatsapp: formData.mobile,
+      rooms: {
+        available: Number(formData.rooms) || 1,
+        size: 'TBD',
+        furniture: [],
+        equipment: [],
+      },
+      pricing: {
+        monthlyFee: Number(formData.monthlyFee) || 0,
+      },
+      availability: {
+        days: formData.availability === 'weekdays'
+          ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+          : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        hours: '9:00 AM - 6:00 PM',
+      },
+      infrastructure: {
+        parking: false,
+        waitingArea: false,
+        pharmacy: false,
+        diagnostics: false,
+        powerBackup: false,
+      },
+      specialties: formData.preferredSpecialties,
+      images: [],
+    };
+
+    try {
+      const res = await fetch('/api/listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setSubmitted(true);
+      } else {
+        if (data.errors) {
+          setFieldErrors(data.errors);
+        }
+        setError(data.error || 'Submission failed. Please check your inputs.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -43,12 +108,17 @@ export default function AddSpacePage() {
 
       <section className="section-padding">
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm p-8">
+          {error && (
+            <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">{error}</div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <h2 className="text-xl font-semibold border-b pb-3">Facility Information</h2>
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Clinic/Hospital Name *</label>
                 <input type="text" required value={formData.clinicName} onChange={(e) => setFormData({...formData, clinicName: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['clinicName'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['clinicName'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Facility Type *</label>
@@ -67,10 +137,12 @@ export default function AddSpacePage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number *</label>
                 <input type="tel" required value={formData.mobile} onChange={(e) => setFormData({...formData, mobile: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['phone'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['phone'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                 <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+                {fieldErrors['email'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['email'][0]}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
@@ -82,8 +154,14 @@ export default function AddSpacePage() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Locality</label>
+              <input type="text" value={formData.locality} onChange={(e) => setFormData({...formData, locality: e.target.value})} placeholder="e.g., Kondapur, Koramangala" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Address *</label>
               <textarea required rows={2} value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
+              {fieldErrors['address'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['address'][0]}</p>}
             </div>
 
             <div>
@@ -137,7 +215,10 @@ export default function AddSpacePage() {
               </div>
             </div>
 
-            <button type="submit" className="btn-secondary w-full mt-6">Submit Listing for Review</button>
+            <button type="submit" disabled={loading} className="btn-secondary w-full mt-6 flex items-center justify-center gap-2">
+              {loading && <Loader2 className="h-5 w-5 animate-spin" />}
+              {loading ? 'Submitting...' : 'Submit Listing for Review'}
+            </button>
           </form>
         </div>
       </section>

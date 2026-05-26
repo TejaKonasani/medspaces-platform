@@ -1,18 +1,48 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MapPin, Phone, Mail, MessageCircle, Building2, BadgeCheck, Clock, Car, Pill, Activity, Zap, Users, IndianRupee, ArrowLeft, Calendar, Armchair } from 'lucide-react';
-import { sampleListings } from '@/data/listings';
+import { MapPin, Phone, Mail, MessageCircle, Building2, BadgeCheck, Clock, Car, Pill, Activity, Zap, Users, IndianRupee, ArrowLeft, Calendar, Armchair, Loader2 } from 'lucide-react';
+import type { Listing } from '@/types';
 
 export default function ListingDetailPage() {
   const params = useParams();
-  const listing = sampleListings.find((l) => l.id === params.id);
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  if (!listing) {
+  useEffect(() => {
+    async function fetchListing() {
+      try {
+        const res = await fetch(`/api/listings/${params.id}`);
+        const data = await res.json();
+        if (data.success) {
+          setListing(data.data);
+        } else {
+          setError(data.error || 'Listing not found');
+        }
+      } catch {
+        setError('Failed to load listing');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchListing();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+      </div>
+    );
+  }
+
+  if (error || !listing) {
     return (
       <div className="section-padding text-center py-20">
-        <h1 className="text-2xl font-bold">Listing not found</h1>
+        <h1 className="text-2xl font-bold">{error || 'Listing not found'}</h1>
         <Link href="/browse" className="mt-4 btn-primary inline-block">Back to Browse</Link>
       </div>
     );
@@ -31,9 +61,7 @@ export default function ListingDetailPage() {
         </Link>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Header */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-start justify-between">
                 <div>
@@ -52,14 +80,12 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
-            {/* Image Placeholder */}
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="h-64 bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
                 <Building2 className="h-24 w-24 text-primary-300" />
               </div>
             </div>
 
-            {/* Room Details */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Consultation Room Details</h2>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -102,7 +128,6 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
-            {/* Availability */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Availability</h2>
               <div className="flex items-center gap-3 mb-3">
@@ -115,7 +140,6 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
-            {/* Infrastructure */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Infrastructure</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -134,7 +158,6 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
-            {/* Specialties */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4">Preferred Specialties</h2>
               <div className="flex flex-wrap gap-2">
@@ -145,9 +168,7 @@ export default function ListingDetailPage() {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Pricing Card */}
             <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
               <h2 className="text-xl font-semibold mb-4">Pricing</h2>
               <div className="space-y-3">
@@ -187,7 +208,6 @@ export default function ListingDetailPage() {
                 </Link>
               </div>
 
-              {/* Contact Person */}
               <div className="mt-6 pt-6 border-t">
                 <p className="text-sm text-gray-500">Contact Person</p>
                 <p className="font-semibold text-gray-900">{listing.contactPerson}</p>
