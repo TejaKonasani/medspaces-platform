@@ -8,12 +8,34 @@ async function request<T>(
 ): Promise<ApiResponse<T>> {
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
+    credentials: 'include',
     ...options,
   });
+
+  if (res.status === 401) {
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+    }
+  }
+
   return res.json();
 }
 
 export const api = {
+  auth: {
+    login(email: string, password: string) {
+      return request<{ user: unknown; sessionId: string }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+    },
+    logout() {
+      return request<{ message: string }>('/auth/logout', { method: 'POST' });
+    },
+    me() {
+      return request<{ user: unknown; permissions: string[] }>('/auth/me');
+    },
+  },
   listings: {
     getAll(params?: Record<string, string>) {
       const query = params ? `?${new URLSearchParams(params).toString()}` : '';

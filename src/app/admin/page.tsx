@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Building2, Users, MessageSquare, Shield, Star, Download, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Building2, Users, MessageSquare, Star, Download, CheckCircle, XCircle, Clock, Eye, LogOut, Loader2, Shield } from 'lucide-react';
 import { sampleListings } from '@/data/listings';
+import { useAuth } from '@/context/AuthContext';
 
 type Tab = 'listings' | 'doctors' | 'inquiries';
 
@@ -22,28 +24,50 @@ const mockInquiries = [
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('listings');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
+  const { user, isLoading, isAuthenticated, logout, hasRole } = useAuth();
+  const router = useRouter();
 
-  if (!isAuthenticated) {
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login?redirect=/admin');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm p-8 max-w-md w-full">
-          <div className="text-center mb-6">
-            <Shield className="h-12 w-12 text-primary-600 mx-auto" />
-            <h1 className="mt-3 text-2xl font-bold">Admin Login</h1>
-          </div>
-          <form onSubmit={(e) => { e.preventDefault(); if (password === 'admin123') setIsAuthenticated(true); }}>
-            <input
-              type="password"
-              placeholder="Enter admin password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 mb-4"
-            />
-            <button type="submit" className="btn-primary w-full">Login</button>
-            <p className="text-xs text-gray-400 text-center mt-3">Demo password: admin123</p>
-          </form>
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 text-primary-600 animate-spin mx-auto" />
+          <p className="mt-2 text-sm text-gray-500">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+
+  if (!hasRole('ADMIN')) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl shadow-sm p-8 max-w-md w-full text-center">
+          <Shield className="h-12 w-12 text-red-500 mx-auto" />
+          <h1 className="mt-3 text-xl font-bold text-gray-900">Access Denied</h1>
+          <p className="mt-2 text-sm text-gray-500">
+            You do not have permission to access the admin dashboard.
+          </p>
+          <button
+            onClick={() => router.push('/')}
+            className="mt-4 btn-primary"
+          >
+            Go to Homepage
+          </button>
         </div>
       </div>
     );
@@ -54,8 +78,23 @@ export default function AdminDashboard() {
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <button onClick={() => setIsAuthenticated(false)} className="text-sm text-gray-500 hover:text-gray-700">Logout</button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-sm text-gray-500">Welcome, {user.name}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary-50 text-primary-700 rounded-full text-xs font-medium">
+                <Shield className="h-3 w-3" />
+                {user.role}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </div>
