@@ -38,15 +38,3 @@ export async function POST(request: NextRequest) {
     return errorResponse(error);
   }
 }
-
-export async function GET() {
-  return successResponse({
-    message: 'Auth service operational',
-    providers: ['credentials'],
-    endpoints: {
-      login: '/api/auth/login',
-      logout: '/api/auth/logout',
-      me: '/api/auth/me',
-    },
-  });
-}
