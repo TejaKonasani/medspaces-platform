@@ -11,6 +11,9 @@ export interface AuthUser {
   email: string;
   name: string;
   role: UserRoleType;
+  phone?: string | null;
+  specialty?: string | null;
+  city?: string | null;
   createdAt: string;
 }
 

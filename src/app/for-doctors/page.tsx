@@ -11,11 +11,11 @@ export default function ForDoctorsPage() {
             Start or expand your practice without the hassle of setting up an independent clinic. Find ready-to-use consultation spaces near you.
           </p>
           <div className="mt-8 flex gap-4">
-            <Link href="/browse" className="btn-primary bg-white text-primary-700 hover:bg-gray-100">
-              Browse Spaces
+            <Link href="/login?redirect=/browse" className="btn-primary bg-white text-primary-700 hover:bg-gray-100">
+              Sign in to browse
             </Link>
-            <Link href="/register/doctor" className="btn-outline border-white text-white hover:bg-white/10">
-              Register Now
+            <Link href="/register?role=DOCTOR" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white bg-primary-600 px-6 py-3 font-semibold text-white shadow-sm shadow-primary-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-700 hover:shadow-md hover:shadow-primary-600/25 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700">
+              Register
             </Link>
           </div>
         </div>
@@ -58,9 +58,9 @@ export default function ForDoctorsPage() {
       <section className="bg-primary-700 text-white">
         <div className="section-padding text-center">
           <h2 className="text-3xl font-bold">Ready to Find Your Space?</h2>
-          <p className="mt-4 text-primary-100">Register now and start browsing verified consultation spaces</p>
-          <Link href="/register/doctor" className="mt-6 inline-block btn-primary bg-white text-primary-700 hover:bg-gray-100">
-            Register as Doctor
+          <p className="mt-4 text-primary-100">Sign in to browse verified consultation spaces, or register if you do not have an account yet.</p>
+          <Link href="/login?redirect=/browse" className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-white bg-primary-600 px-6 py-3 font-semibold text-white shadow-sm shadow-primary-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-700 hover:shadow-md hover:shadow-primary-600/25 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700">
+            Sign in to browse
           </Link>
         </div>
       </section>

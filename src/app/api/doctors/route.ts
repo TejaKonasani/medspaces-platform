@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
-import { store } from '@/lib/store';
 import { doctorSchema } from '@/lib/validations';
 import { successResponse, errorResponse } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
-import type { Doctor } from '@/types';
+import { doctorsRepository } from '@/lib/repositories';
 
 export async function GET() {
   try {
-    const doctors = store.getAllDoctors();
+    const doctors = await doctorsRepository.findMany();
     return successResponse(doctors);
   } catch (error) {
     return errorResponse(error);
@@ -19,19 +18,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = doctorSchema.parse(body);
 
-    const existingDoctor = store.getDoctorByEmail(validated.email);
+    const existingDoctor = await doctorsRepository.findByEmail(validated.email);
     if (existingDoctor) {
       throw AppError.conflict('A doctor with this email is already registered');
     }
 
-    const doctor: Doctor = {
-      ...validated,
-      id: store.generateId(),
-      experience: Number(validated.experience),
-      createdAt: new Date().toISOString(),
-    };
-
-    const created = store.createDoctor(doctor);
+    const created = await doctorsRepository.create(validated);
     return successResponse(created, 201);
   } catch (error) {
     return errorResponse(error);

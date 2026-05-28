@@ -19,8 +19,8 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">For Doctors</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/browse" className="hover:text-white transition-colors">Browse Spaces</Link></li>
-              <li><Link href="/register/doctor" className="hover:text-white transition-colors">Register as Doctor</Link></li>
+              <li><Link href="/login?redirect=/browse" className="hover:text-white transition-colors">Sign in to browse</Link></li>
+              <li><Link href="/register?role=DOCTOR" className="hover:text-white transition-colors">Register as Doctor</Link></li>
               <li><Link href="/for-doctors" className="hover:text-white transition-colors">How It Works</Link></li>
               <li><Link href="/faq" className="hover:text-white transition-colors">FAQs</Link></li>
             </ul>
@@ -29,7 +29,8 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">For Clinics</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/add-space" className="hover:text-white transition-colors">List Your Space</Link></li>
+              <li><Link href="/login?redirect=/add-space" className="hover:text-white transition-colors">Sign in to list</Link></li>
+              <li><Link href="/register?role=CLINIC_OWNER" className="hover:text-white transition-colors">Register as Clinic</Link></li>
               <li><Link href="/for-clinics" className="hover:text-white transition-colors">Why MedSpaces</Link></li>
               <li><Link href="/branding" className="hover:text-white transition-colors">Branding Services</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>

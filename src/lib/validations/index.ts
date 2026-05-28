@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { INQUIRY_STATUSES } from '@/lib/inquiries';
 
 const phoneRegex = /^\+?[0-9\s\-()]{10,15}$/;
 
@@ -70,7 +71,42 @@ export const inquirySchema = z.object({
   message: z.string().min(10, 'Message must be at least 10 characters'),
 });
 
+export const inquiryStatusSchema = z.object({
+  status: z.enum(INQUIRY_STATUSES, {
+    errorMap: () => ({ message: 'Invalid inquiry status' }),
+  }),
+});
+
+export const inquiryAdminNoteSchema = z.object({
+  adminNotes: z.string().trim().min(2, 'Admin note must be at least 2 characters').max(4000, 'Admin note is too long'),
+});
+
+export const listingModerationActionSchema = z.object({
+  action: z.enum(['APPROVE', 'REJECT', 'VERIFY'], {
+    errorMap: () => ({ message: 'Invalid listing moderation action' }),
+  }),
+});
+
+export const doctorModerationActionSchema = z.object({
+  action: z.enum(['VERIFY', 'DEACTIVATE', 'ACTIVATE'], {
+    errorMap: () => ({ message: 'Invalid doctor moderation action' }),
+  }),
+});
+
+export const inquiryWorkflowQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().trim().optional(),
+  status: z.union([z.enum(INQUIRY_STATUSES), z.array(z.enum(INQUIRY_STATUSES))]).optional(),
+  listingId: z.string().optional(),
+});
+
 export type ListingInput = z.infer<typeof listingSchema>;
 export type ListingUpdateInput = z.infer<typeof listingUpdateSchema>;
 export type DoctorInput = z.infer<typeof doctorSchema>;
 export type InquiryInput = z.infer<typeof inquirySchema>;
+export type InquiryStatusInput = z.infer<typeof inquiryStatusSchema>;
+export type InquiryAdminNoteInput = z.infer<typeof inquiryAdminNoteSchema>;
+export type ListingModerationActionInput = z.infer<typeof listingModerationActionSchema>;
+export type DoctorModerationActionInput = z.infer<typeof doctorModerationActionSchema>;
+export type InquiryWorkflowQueryInput = z.infer<typeof inquiryWorkflowQuerySchema>;

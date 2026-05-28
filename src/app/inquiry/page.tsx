@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Send, CheckCircle, Loader2 } from 'lucide-react';
-import { specialties } from '@/data/listings';
+import { Send, CheckCircle2, Sparkles } from 'lucide-react';
+import { api } from '@/lib/api-client';
+import { specialties } from '@/data/listing-options';
+import { Alert, Badge, Button, Card, Input, Select, Textarea, useToast } from '@/components/ui';
 
-export default function InquiryPage() {
+function InquiryPageContent() {
   const searchParams = useSearchParams();
   const listingId = searchParams.get('listing') || '';
 
@@ -13,6 +15,7 @@ export default function InquiryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const { success, error: showError } = useToast();
 
   const [formData, setFormData] = useState({
     doctorName: '', specialty: '', phone: '', email: '', listingId, message: '',
@@ -25,24 +28,21 @@ export default function InquiryPage() {
     setFieldErrors({});
 
     try {
-      const res = await fetch('/api/inquiries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
+      const data = await api.inquiries.create(formData);
 
       if (data.success) {
         setSubmitted(true);
+        success('Inquiry submitted', 'Your introduction request has been sent.');
       } else {
         if (data.errors) {
           setFieldErrors(data.errors);
         }
         setError(data.error || 'Submission failed. Please check your inputs.');
+        showError('Submission failed', data.error || 'Please check your inputs.');
       }
     } catch {
       setError('Network error. Please try again.');
+      showError('Network error', 'Please try again.');
     } finally {
       setLoading(false);
     }
@@ -50,72 +50,80 @@ export default function InquiryPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm p-12 text-center max-w-md">
-          <CheckCircle className="h-16 w-16 text-secondary-500 mx-auto" />
-          <h2 className="mt-4 text-2xl font-bold">Inquiry Submitted!</h2>
-          <p className="mt-2 text-gray-600">Your inquiry has been sent to the clinic and our team. We&apos;ll facilitate the introduction within 24 hours.</p>
-        </div>
+      <div className="page-shell flex min-h-screen items-center justify-center bg-slate-50/80 px-4 py-16">
+        <Card className="max-w-lg p-8 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary-50 text-secondary-600">
+            <CheckCircle2 className="h-8 w-8" />
+          </div>
+          <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-900">Inquiry submitted</h2>
+          <p className="mt-3 text-gray-600">Your request has been sent to the clinic and our team. We&apos;ll facilitate the introduction within 24 hours.</p>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <section className="bg-gradient-to-br from-primary-600 to-primary-800 text-white">
+    <div className="page-shell min-h-screen bg-slate-50/80">
+      <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-slate-950 text-white">
         <div className="section-padding py-16">
-          <div className="flex items-center gap-3">
-            <Send className="h-10 w-10" />
-            <h1 className="text-4xl font-bold">Request Introduction</h1>
+          <div className="max-w-3xl">
+            <Badge variant="outline" className="border-white/20 bg-white/10 text-white">
+              <Sparkles className="mr-2 h-3.5 w-3.5" /> Introduction request
+            </Badge>
+            <div className="mt-4 flex items-center gap-3">
+              <Send className="h-10 w-10" />
+              <h1 className="text-4xl font-bold tracking-tight">Request introduction</h1>
+            </div>
+            <p className="mt-3 text-lg text-primary-100">Let MedSpaces connect you with the clinic through a fast, guided inquiry flow.</p>
           </div>
-          <p className="mt-3 text-primary-100 text-lg">Let MedSpaces connect you with the clinic</p>
         </div>
       </section>
 
-      <section className="section-padding">
-        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm p-8">
-          {error && (
-            <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-6">{error}</div>
-          )}
+      <section className="section-padding py-10" aria-labelledby="inquiry-form-heading">
+        <div className="mx-auto max-w-3xl">
+          {error ? <Alert variant="error" title="We could not submit your inquiry" className="mb-6">{error}</Alert> : null}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid sm:grid-cols-2 gap-5">
+          <Card className="p-6 md:p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
-                <input type="text" required value={formData.doctorName} onChange={(e) => setFormData({...formData, doctorName: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-                {fieldErrors['doctorName'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['doctorName'][0]}</p>}
+                <h2 id="inquiry-form-heading" className="text-2xl font-semibold tracking-tight text-gray-900">Doctor inquiry details</h2>
+                <p className="mt-2 text-sm text-gray-500">Share enough detail for the clinic team to assess fit and respond efficiently.</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Specialty *</label>
-                <select required value={formData.specialty} onChange={(e) => setFormData({...formData, specialty: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+              {listingId ? <Badge variant="info">Selected listing: {listingId}</Badge> : null}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Input label="Your name" required value={formData.doctorName} onChange={(e) => setFormData({ ...formData, doctorName: e.target.value })} error={fieldErrors.doctorName?.[0]} hint="Use the name you want clinics to contact." />
+                <Select label="Specialty" required value={formData.specialty} onChange={(e) => setFormData({ ...formData, specialty: e.target.value })} error={fieldErrors.specialty?.[0]}>
                   <option value="">Select</option>
-                  {specialties.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-                {fieldErrors['specialty'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['specialty'][0]}</p>}
+                  {specialties.map((specialty) => <option key={specialty} value={specialty}>{specialty}</option>)}
+                </Select>
+                <Input label="Phone number" required type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} error={fieldErrors.phone?.[0]} hint="Include the best number for quick follow-up." />
+                <Input label="Email" required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} error={fieldErrors.email?.[0]} hint="We will send a copy of the introduction request here." />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                <input type="tel" required value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-                {fieldErrors['phone'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['phone'][0]}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-                {fieldErrors['email'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['email'][0]}</p>}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
-              <textarea required rows={4} value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} placeholder="Tell us about your requirements (minimum 10 characters)..." className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" />
-              {fieldErrors['message'] && <p className="text-red-500 text-xs mt-1">{fieldErrors['message'][0]}</p>}
-            </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
-              {loading && <Loader2 className="h-5 w-5 animate-spin" />}
-              {loading ? 'Submitting...' : 'Submit Inquiry'}
-            </button>
-          </form>
+              <Textarea
+                label="Message"
+                required
+                rows={5}
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                placeholder="Tell us about your requirements (minimum 10 characters)..."
+                error={fieldErrors.message?.[0]}
+                hint="Mention preferred timings, expected patient flow, or equipment needs."
+              />
+              <Button type="submit" fullWidth isLoading={loading}>
+                Submit inquiry
+              </Button>
+            </form>
+          </Card>
         </div>
       </section>
     </div>
+  );
+}
+
+export default function InquiryPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <InquiryPageContent />
+    </Suspense>
   );
 }

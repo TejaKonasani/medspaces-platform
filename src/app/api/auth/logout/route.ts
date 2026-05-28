@@ -1,13 +1,14 @@
 import { successResponse, errorResponse } from '@/lib/responses';
-import { getCurrentSession, deleteSession, clearSessionCookie } from '@/lib/session';
+import { getCurrentSessionAsync, deleteSession, clearSessionCookie, clearSessionRoleCookie } from '@/lib/session';
 
 export async function POST() {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSessionAsync();
     if (session) {
-      deleteSession(session.id);
+      await deleteSession(session.id);
     }
     clearSessionCookie();
+    clearSessionRoleCookie();
 
     return successResponse({ message: 'Logged out successfully' });
   } catch (error) {

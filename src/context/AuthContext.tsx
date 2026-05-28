@@ -1,14 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { UserRoleType, PermissionType } from '@/lib/auth';
-
-interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRoleType;
-}
+import type { AuthUser, UserRoleType, PermissionType } from '@/lib/auth';
 
 interface AuthState {
   user: AuthUser | null;
@@ -18,7 +11,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: UserRoleType }>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   hasPermission: (permission: PermissionType) => boolean;
@@ -37,7 +30,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshAuth = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', {
+        cache: 'no-store',
+        credentials: 'include',
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.data?.user) {
@@ -65,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
@@ -77,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isAuthenticated: true,
         });
         await refreshAuth();
-        return { success: true };
+        return { success: true, role: data.data.user.role };
       }
 
       return { success: false, error: data.error || 'Login failed' };
@@ -87,8 +85,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    setState({ user: null, permissions: [], isLoading: false, isAuthenticated: false });
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        cache: 'no-store',
+        credentials: 'include',
+      });
     } finally {
       setState({ user: null, permissions: [], isLoading: false, isAuthenticated: false });
     }

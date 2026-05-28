@@ -43,20 +43,52 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="mt-16">
-            <h2 className="text-3xl font-bold">The Problem We Solve</h2>
-            <div className="mt-6 space-y-4">
-              <div className="p-4 bg-red-50 border-l-4 border-red-400 rounded-r-lg">
-                <h3 className="font-semibold text-red-800">For Doctors</h3>
-                <p className="text-red-700 mt-1">High clinic setup costs, difficulty finding locations, and lack of visibility into available spaces create barriers to starting independent practice.</p>
+          <div className="mt-16 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm shadow-slate-900/5">
+            <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
+              <div className="bg-gradient-to-br from-primary-700 via-primary-800 to-slate-950 px-6 py-8 text-white sm:px-8 sm:py-10">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-100">The problem we solve</p>
+                <h2 className="mt-3 text-3xl font-bold tracking-tight">Making practice space discovery feel modern, not manual.</h2>
+                <p className="mt-4 max-w-xl text-base leading-7 text-primary-100">
+                  MedSpaces connects two sides of the healthcare market that usually struggle to find each other. The result is less friction for doctors and better utilization for clinics.
+                </p>
               </div>
-              <div className="p-4 bg-orange-50 border-l-4 border-orange-400 rounded-r-lg">
-                <h3 className="font-semibold text-orange-800">For Clinics</h3>
-                <p className="text-orange-700 mt-1">Many healthcare facilities have idle consultation rooms due to lack of marketing, difficulty reaching doctors, and inefficient infrastructure utilization.</p>
-              </div>
-              <div className="p-4 bg-green-50 border-l-4 border-green-400 rounded-r-lg">
-                <h3 className="font-semibold text-green-800">Our Solution</h3>
-                <p className="text-green-700 mt-1">MedSpaces creates a centralized discovery platform that connects medical talent with available healthcare infrastructure, solving both sides of the marketplace.</p>
+
+              <div className="grid gap-4 bg-slate-50 px-6 py-6 sm:px-8 sm:py-8">
+                <div className="rounded-2xl border border-red-100 bg-white p-5 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+                      <Target className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">For doctors</h3>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-gray-600">
+                    High setup costs, scattered availability, and low market visibility make it hard to start or expand a practice quickly.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                      <Heart className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">For clinics</h3>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-gray-600">
+                    Idle consultation rooms stay underused when there is no reliable way to reach the right doctors at the right time.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                      <Globe className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Our solution</h3>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-gray-600">
+                    A centralized marketplace makes discovery, review, and inquiry management feel consistent, trustworthy, and ready for real usage.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
