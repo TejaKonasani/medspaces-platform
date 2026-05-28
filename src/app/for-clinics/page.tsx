@@ -11,11 +11,11 @@ export default function ForClinicsPage() {
             Monetize your idle consultation rooms. Connect with verified doctors looking for practice spaces.
           </p>
           <div className="mt-8 flex gap-4">
-            <Link href="/add-space" className="btn-primary bg-white text-secondary-700 hover:bg-gray-100">
-              List Your Space
+            <Link href="/login?redirect=/add-space" className="btn-primary bg-white text-secondary-700 hover:bg-gray-100">
+              Sign in to list
             </Link>
-            <Link href="/branding" className="btn-outline border-white text-white hover:bg-white/10">
-              Branding Services
+            <Link href="/register?role=CLINIC_OWNER" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white bg-secondary-600 px-6 py-3 font-semibold text-white shadow-sm shadow-secondary-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary-700 hover:shadow-md hover:shadow-secondary-600/25 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-700">
+              Register
             </Link>
           </div>
         </div>
@@ -68,9 +68,9 @@ export default function ForClinicsPage() {
       <section className="bg-secondary-700 text-white">
         <div className="section-padding text-center">
           <h2 className="text-3xl font-bold">Start Earning from Your Space</h2>
-          <p className="mt-4 text-secondary-100">List your consultation rooms and connect with doctors today</p>
-          <Link href="/add-space" className="mt-6 inline-block btn-primary bg-white text-secondary-700 hover:bg-gray-100">
-            List Your Space
+          <p className="mt-4 text-secondary-100">Sign in to list your consultation rooms, or register if you do not have a clinic account yet.</p>
+          <Link href="/login?redirect=/add-space" className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-white bg-secondary-600 px-6 py-3 font-semibold text-white shadow-sm shadow-secondary-600/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary-700 hover:shadow-md hover:shadow-secondary-600/25 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-secondary-700">
+            Sign in to list
           </Link>
         </div>
       </section>

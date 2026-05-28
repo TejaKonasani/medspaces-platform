@@ -20,7 +20,7 @@ class SessionStore {
   }
 
   deleteByUserId(userId: string): void {
-    for (const [id, session] of this.sessions.entries()) {
+    for (const [id, session] of Array.from(this.sessions.entries())) {
       if (session.userId === userId) {
         this.sessions.delete(id);
       }
@@ -29,7 +29,7 @@ class SessionStore {
 
   cleanup(): void {
     const now = Date.now();
-    for (const [id, session] of this.sessions.entries()) {
+    for (const [id, session] of Array.from(this.sessions.entries())) {
       if (session.expiresAt < now) {
         this.sessions.delete(id);
       }

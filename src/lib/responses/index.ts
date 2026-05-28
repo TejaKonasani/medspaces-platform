@@ -10,7 +10,12 @@ export function successResponse<T>(
 ): NextResponse<ApiResponse<T>> {
   return NextResponse.json(
     { success: true, data, ...(meta && { meta }) },
-    { status }
+    {
+      status,
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    }
   );
 }
 
@@ -20,7 +25,12 @@ export function errorResponse(
   if (error instanceof AppError) {
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: error.statusCode }
+      {
+        status: error.statusCode,
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+        },
+      }
     );
   }
 
@@ -34,12 +44,22 @@ export function errorResponse(
 
     return NextResponse.json(
       { success: false, error: 'Validation failed', errors: fieldErrors },
-      { status: 422 }
+      {
+        status: 422,
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+        },
+      }
     );
   }
 
   return NextResponse.json(
     { success: false, error: 'Internal server error' },
-    { status: 500 }
+    {
+      status: 500,
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    }
   );
 }

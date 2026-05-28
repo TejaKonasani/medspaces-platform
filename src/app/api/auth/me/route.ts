@@ -1,23 +1,19 @@
 import { successResponse, errorResponse } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
-import { getCurrentSession } from '@/lib/session';
-import { userStore } from '@/lib/auth/users';
+import { getCurrentSessionAsync, setSessionRoleCookie } from '@/lib/session';
+import { usersRepository } from '@/lib/repositories/users.repository';
 import { getPermissionsForRole } from '@/lib/auth/permissions';
 
 export async function GET() {
   try {
-    const session = getCurrentSession();
-    if (!session) {
-      throw AppError.unauthorized('Not authenticated');
-    }
+    const session = await getCurrentSessionAsync();
+    if (!session) throw AppError.unauthorized('Not authenticated');
 
-    const storedUser = userStore.findById(session.userId);
-    if (!storedUser) {
-      throw AppError.unauthorized('User not found');
-    }
+    const user = await usersRepository.findById(session.userId);
+    if (!user) throw AppError.unauthorized('User not found');
 
-    const user = userStore.getPublicUser(storedUser);
-    const permissions = getPermissionsForRole(user.role);
+    setSessionRoleCookie(user.role);
+    const permissions = getPermissionsForRole(user.role as any);
 
     return successResponse({
       user: {
@@ -25,6 +21,9 @@ export async function GET() {
         email: user.email,
         name: user.name,
         role: user.role,
+        phone: user.phone ?? null,
+        specialty: user.specialty ?? null,
+        city: user.city ?? null,
       },
       permissions,
     });

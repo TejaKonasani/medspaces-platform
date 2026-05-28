@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/responses';
 import { AppError } from '@/lib/errors';
-import { userStore } from '@/lib/auth/users';
-import { createSession, setSessionCookie } from '@/lib/session';
+import { createSessionAsync, setSessionCookie, setSessionRoleCookie } from '@/lib/session';
+import { usersRepository } from '@/lib/repositories/users.repository';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,20 +17,22 @@ export async function POST(request: NextRequest) {
       throw AppError.badRequest('Invalid credentials format');
     }
 
-    const user = userStore.authenticate(email.trim(), password);
-    if (!user) {
-      throw AppError.unauthorized('Invalid email or password');
-    }
+    const stored = await usersRepository.findByEmail(email.trim());
+    if (!stored) throw AppError.unauthorized('Invalid email or password');
 
-    const session = createSession(user);
+    const valid = await usersRepository.verifyPassword(email.trim(), password);
+    if (!valid) throw AppError.unauthorized('Invalid email or password');
+
+    const session = await createSessionAsync(stored);
     setSessionCookie(session.id);
+    setSessionRoleCookie(stored.role);
 
     return successResponse({
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        id: stored.id,
+        email: stored.email,
+        name: stored.name,
+        role: stored.role,
       },
       sessionId: session.id,
     });
